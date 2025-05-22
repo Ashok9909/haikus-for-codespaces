@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sata Farsan Bill Generator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #fefefe;
+    }
+    h1 {
+      text-align: center;
+      color: #d35400;
+    }
+    .form-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: bold;
+      flex: 1 1 200px;
+    }
+    input, button {
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 1em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    .total {
+      font-weight: bold;
+      font-size: 1.2em;
+      text-align: right;
+      margin-top: 20px;
+    }
+    .print-btn {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 1.1em;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .preset-items {
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+    .preset-items h2 {
+      text-align: center;
+      color: #34495e;
+    }
+    .preset-items ul {
+      list-style: none;
+      padding: 0;
+      columns: 2;
+      -webkit-columns: 2;
+      -moz-columns: 2;
+      column-gap: 20px;
+    }
+    .preset-items li {
+      padding: 4px 0;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      user-select: none;
+    }
+    .preset-items li:hover {
+      background: #f1c40f;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sata Farsan બિલ જનરેટર</h1>
+
+  <div class="preset-items">
+    <h2>પસંદીદા વસ્તુઓ (ક્લિક કરો ઉમેરવા માટે)</h2>
+    <ul id="presetList">
+      <li data-price="120">વસ્તુ સેવ</li>
+      <li data-price="120">ગાંઠિયા</li>
+      <li data-price="120">જી.સેવ</li>
+      <li data-price="120">ભાઠા</li>
+      <li data-price="120">મારવાડી</li>
+      <li data-price="120">તીખુ</li>
+      <li data-price="120">મકાઇ</li>
+      <li data-price="120">નડિયાદી</li>
+      <li data-price="120">પંજાબી</li>
+      <li data-price="120">લસણ</li>
+      <li data-price="120">ચોખા પવા</li>
+      <li data-price="100">વટાણા</li>
+      <li data-price="130">દાળ</li>
+      <li data-price="130">શિંગભજીયા</li>
+      <li data-price="130">મસાલા સિંગ</li>
+      <li data-price="140">T બુન્દી</li>
+      <li data-price="140">M બુન્દી</li>
+      <li data-price="135">T ફરાળી</li>
+      <li data-price="135">M ફરાળી</li>
+      <li data-price="160">કેળા</li>
+      <li data-price="170">બટેકા વેફર</li>
+      <li data-price="175">200g વેફર</li>
+      <li data-price="180">T ફરાળીR</li>
+      <li data-price="180">M ફરાળીR</li>
+      <li data-price="215">200g Mફરાળી</li>
+      <li data-price="215">200g Tફરાળી</li>
+      <li data-price="202">Rવેફર</li>
+      <li data-price="225">200g વેફર R</li>
+      <li data-price="105">ભાખરવડી M</li>
+      <li data-price="105">ભાખરવડી N</li>
+      <li data-price="130">મોળી કળી</li>
+      <li data-price="105">સકરપારા</li>
+    </ul>
+  </div>
+
+  <div class="form-section">
+    <label>ગ્રાહકનું નામ:
+      <input type="text" id="customerName" placeholder="ગ્રાહકનું નામ લખો">
+    </label>
+    <label>વસ્તુનું નામ:
+      <input type="text" id="itemName" placeholder="વસ્તુનું નામ લખો">
+    </label>
+    <label>જથ્થો:
+      <input type="number" id="itemQty" value="1" min="1">
+    </label>
+    <label>કિંમત (₹):
+      <input type="number" id="itemPrice" value="0" min="0">
+    </label>
+    <div style="align-self: flex-end;">
+      <button onclick="addItem()">ઉમેરો</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>વસ્તુ</th>
+        <th>જથ્થો</th>
+        <th>દર</th>
+        <th>કુલ</th>
+      </tr>
+    </thead>
+    <tbody id="billBody"></tbody>
+  </table>
+
+  <p class="total">કુલ રકમ: ₹<span id="totalAmount">0</span></p>
+  <button class="print-btn" onclick="window.print()">પ્રિન્ટ કરો</button>
+
+  <script>
+    let total = 0;
+
+    function addItem() {
+      const name = document.getElementById('itemName').value.trim();
+      const qty = parseFloat(document.getElementById('itemQty').value);
+      const price = parseFloat(document.getElementById('itemPrice').value);
+      if (!name || qty <= 0 || price < 0) return;
+
+      const row = document.createElement('tr');
+      const itemTotal = qty * price;
+      row.innerHTML = `<td>${name}</td><td>${qty}</td><td>₹${price.toFixed(2)}</td><td>₹${itemTotal.toFixed(2)}</td>`;
+      document.getElementById('billBody').appendChild(row);
+
+      total += itemTotal;
+      document.getElementById('totalAmount').innerText = total.toFixed(2);
+
+      document.getElementById('itemName').value = '';
+      document.getElementById('itemQty').value = 1;
+      document.getElementById('itemPrice').value = 0;
+    }
+
+    // પ્રીસેટ વસ્તુઓ ક્લિક કરીને ફોર્મમાં મૂકો
+    document.getElementById('presetList').addEventListener('click', function(event) {
+      if(event.target && event.target.nodeName === 'LI') {
+        const itemName = event.target.textContent.trim();
+        const itemPrice = parseFloat(event.target.getAttribute('data-price'));
+        document.getElementById('itemName').value = itemName;
+        document.getElementById('itemQty').value = 1;
+        document.getElementById('itemPrice').value = itemPrice;
+      }
+    });
+  </script>
+</body>
+</html>
